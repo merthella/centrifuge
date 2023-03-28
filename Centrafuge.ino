@@ -1,9 +1,9 @@
 #include <LiquidCrystal_I2C.h>
-#include <ESC.h>
+#include <Servo.h>
 
-// LCD ekran ve ESC nesneleri oluşturuluyor
+// LCD ekran ve Servo nesneleri oluşturuluyor
 LiquidCrystal_I2C lcd(0x27, 16, 2);
-ESC myESC;
+Servo myServo;
 
 // Değişkenler tanımlanıyor
 int motorDevri = 0;
@@ -25,11 +25,11 @@ void setup() {
   delay(5000);
   lcd.clear();
 
-  // Butonlar ve ESC için gerekli pinler tanımlanıyor
+  // Butonlar ve Servo için gerekli pinler tanımlanıyor
   pinMode(startButton, INPUT_PULLUP);
   pinMode(arttirmaButton, INPUT_PULLUP);
   pinMode(azaltmaButton, INPUT_PULLUP);
-  myESC.attach(10); // Opto-ESC sinyali için kullanılan pin
+  myServo.attach(10); // Servo sinyali için kullanılan pin
   pinMode(buzzer, OUTPUT);
 }
 
@@ -92,8 +92,8 @@ void loop() {
   while (digitalRead(startButton) == HIGH) {
     if (digitalRead(arttirmaButton) == LOW) {
       // Motor hızı ayarlanıyor ve geri sayım başlatılıyor
-      int pwm = map(motorDevri, 0, 10000, 1000, 2000);
-      myESC.writeMicroseconds(pwm); // Opto-ESC'yi belirtilen hızda çalıştır
+      int servoValue = map(motorDevri, 0, 10000, 0, 180);
+      myServo.write(servoValue); // Servo'yu belirtilen pozisyona getir
       dakikaKalan = dakika;
       while (dakikaKalan > 0) {
         lcd.setCursor(0, 0);
@@ -105,14 +105,15 @@ void loop() {
       }
 
       // Motor yavaşlatılıyor ve sesli uyarı veriliyor
-     for (int i = 2000; i >= 1000; i -= 10) {
-    myESC.writeMicroseconds(i); // Opto-ESC'yi yavaşlatarak durdur
-  delay(10);
-}
-digitalWrite(buzzer, HIGH);
-delay(1000);
-digitalWrite(buzzer, LOW);
-delay(500);
+      for (int i = 180; i >= 0; i -= 1) {
+        int servoValue = map(i, 0, 180, 0, 180);
+        myServo.write(servoValue); // Servo'yu yavaşlatarak durdur
+        delay(10);
+      }
+      digitalWrite(buzzer, HIGH);
+      delay(1000);
+      digitalWrite(buzzer, LOW);
+      delay(500);
 }
 }
 
@@ -121,3 +122,4 @@ motorDevri = 0;
 dakika = 0;
 lcd.clear();
 }
+
